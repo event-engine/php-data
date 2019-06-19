@@ -48,7 +48,7 @@ final class ImmutableRecordDataConverter implements DataConverter
     {
         $class = $this->getClassOfType($type);
 
-        return $type::fromArray($data);
+        return $class::fromArray($data);
     }
 
     private function getClassOfType(string $type): string

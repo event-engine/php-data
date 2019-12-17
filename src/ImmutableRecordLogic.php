@@ -299,7 +299,10 @@ trait ImmutableRecordLogic
                 );
             }
 
-            $type = (string) $method->getReturnType();
+            /** @var \ReflectionNamedType $returnType */
+            $returnType = $method->getReturnType();
+
+            $type = $returnType->getName();
 
             $propTypeMap[$prop->getName()] = [$type, self::isScalarType($type), $method->getReturnType()->allowsNull()];
         }

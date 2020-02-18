@@ -277,34 +277,9 @@ trait ImmutableRecordLogic
                 continue;
             }
 
-            if (! $refObj->hasMethod($prop->getName())) {
-                throw new \RuntimeException(
-                    \sprintf(
-                        'No method found for Record property %s of %s that has the same name.',
-                        $prop->getName(),
-                        __CLASS__
-                    )
-                );
-            }
+            $type = $prop->getType();
 
-            $method = $refObj->getMethod($prop->getName());
-
-            if (! $method->hasReturnType()) {
-                throw new \RuntimeException(
-                    \sprintf(
-                        'Method %s of Record %s does not have a return type',
-                        $method->getName(),
-                        __CLASS__
-                    )
-                );
-            }
-
-            /** @var \ReflectionNamedType $returnType */
-            $returnType = $method->getReturnType();
-
-            $type = $returnType->getName();
-
-            $propTypeMap[$prop->getName()] = [$type, self::isScalarType($type), $method->getReturnType()->allowsNull()];
+            $propTypeMap[$prop->getName()] = [(string) $type, self::isScalarType((string) $type), $type->allowsNull()];
         }
 
         return $propTypeMap;

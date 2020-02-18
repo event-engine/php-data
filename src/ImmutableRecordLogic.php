@@ -277,9 +277,19 @@ trait ImmutableRecordLogic
                 continue;
             }
 
+            if (! $prop->hasType()) {
+                throw new \RuntimeException(
+                    \sprintf(
+                        'Missing type hint for property %s of record %s',
+                        $prop->getName(),
+                        __CLASS__
+                    )
+                );
+            }
+
             $type = $prop->getType();
 
-            $propTypeMap[$prop->getName()] = [(string) $type, self::isScalarType((string) $type), $type->allowsNull()];
+            $propTypeMap[$prop->getName()] = [$type->getName(), self::isScalarType($type->getName()), $type->allowsNull()];
         }
 
         return $propTypeMap;

@@ -277,22 +277,36 @@ trait ImmutableRecordLogic
                 continue;
             }
 
-            if (! $prop->hasType()) {
-                throw new \RuntimeException(
-                    \sprintf(
-                        'Missing type hint for property %s of record %s',
-                        $prop->getName(),
-                        __CLASS__
-                    )
-                );
-            }
-
-            $type = $prop->getType();
+            $type = self::typeFromProperty($prop, $refObj);
 
             $propTypeMap[$prop->getName()] = [$type->getName(), self::isScalarType($type->getName()), $type->allowsNull()];
         }
 
         return $propTypeMap;
+    }
+
+    private static function typeFromProperty(\ReflectionProperty $prop, \ReflectionClass $refObj) : \ReflectionType
+    {
+        if ($prop->hasType()) {
+            return $prop->getType();
+        }
+
+        if ($refObj->hasMethod($prop->getName())) {
+            $method = $refObj->getMethod($prop->getName());
+
+            if ($method->hasReturnType()) {
+                return $method->getReturnType();
+            }
+        }
+
+        throw new \RuntimeException(
+            \sprintf(
+                'Could not find a type for property %s of record %s. ' .
+                'No type hint or getter method with a return type is given.',
+                $prop->getName(),
+                __CLASS__
+            )
+        );
     }
 
     private static function isScalarType(string $type): bool

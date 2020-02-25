@@ -28,9 +28,3 @@ Please find the `settings.zip` [here](https://github.com/event-engine/php-data/b
 ## Usage
 
 Usage is described in the [documentation](https://event-engine.io/api/immutable_state.html)
-
-## No Tests?
-
-Looks strange, right? A stable open source package without a single test can only be a joke ... 
-You're right! The situation isn't ideal. However, this is a low level package used by [event-engine/php-json-schema](https://github.com/event-engine/php-json-schema).
-The tests included there also cover the implementation of this package. Anyway, a pull request that adds some tests is always welcome!

@@ -11,6 +11,12 @@ declare(strict_types=1);
 
 namespace EventEngine\Data;
 
+/**
+ * Interface ImmutableRecord
+ *
+ * @package EventEngine\Data
+ * @psalm-immutable
+ */
 interface ImmutableRecord
 {
     const PHP_TYPE_STRING = 'string';

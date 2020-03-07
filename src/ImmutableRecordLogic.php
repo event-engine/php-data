@@ -11,6 +11,12 @@ declare(strict_types=1);
 
 namespace EventEngine\Data;
 
+/**
+ * Trait ImmutableRecordLogic
+ * @package EventEngine\Data
+ *
+ * @psalm-immutable
+ */
 trait ImmutableRecordLogic
 {
     /**
@@ -36,7 +42,7 @@ trait ImmutableRecordLogic
      * @param array $recordData
      * @return self
      */
-    public static function fromRecordData(array $recordData)
+    public static function fromRecordData(array $recordData): self
     {
         return new self($recordData);
     }
@@ -45,7 +51,7 @@ trait ImmutableRecordLogic
      * @param array $nativeData
      * @return self
      */
-    public static function fromArray(array $nativeData)
+    public static function fromArray(array $nativeData): self
     {
         return new self(null, $nativeData);
     }
@@ -73,7 +79,7 @@ trait ImmutableRecordLogic
      * @param array $recordData
      * @return self
      */
-    public function with(array $recordData)
+    public function with(array $recordData): self
     {
         $copy = clone $this;
         $copy->setRecordData($recordData);
@@ -127,7 +133,7 @@ trait ImmutableRecordLogic
         return $this->toArray() === $other->toArray();
     }
 
-    private function setRecordData(array $recordData)
+    private function setRecordData(array $recordData): void
     {
         foreach ($recordData as $key => $value) {
             $this->assertType($key, $value);
@@ -135,7 +141,7 @@ trait ImmutableRecordLogic
         }
     }
 
-    private function setNativeData(array $nativeData)
+    private function setNativeData(array $nativeData): void
     {
         $recordData = [];
         $arrayPropItemTypeMap = self::getArrayPropItemTypeMapFromMethodOrCache();
@@ -182,7 +188,7 @@ trait ImmutableRecordLogic
         $this->setRecordData($recordData);
     }
 
-    private function assertAllNotNull()
+    private function assertAllNotNull(): void
     {
         foreach (self::$__propTypeMap as $key => [$type, $isNative, $isNullable]) {
             if (null === $this->{$key} && ! $isNullable) {
@@ -195,7 +201,7 @@ trait ImmutableRecordLogic
         }
     }
 
-    private function assertType(string $key, $value)
+    private function assertType(string $key, $value): void
     {
         if (! isset(self::$__propTypeMap[$key])) {
             throw new \InvalidArgumentException(\sprintf(
@@ -264,7 +270,7 @@ trait ImmutableRecordLogic
         }
     }
 
-    private static function buildPropTypeMap()
+    private static function buildPropTypeMap(): array
     {
         $refObj = new \ReflectionClass(__CLASS__);
 
@@ -383,12 +389,12 @@ trait ImmutableRecordLogic
     }
 
     /**
-     * @var array
+     * @var array|null
      */
     private static $__propTypeMap;
 
     /**
-     * @var array
+     * @var array|null
      */
     private static $__arrayPropItemTypeMap;
 }

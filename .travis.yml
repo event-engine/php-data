@@ -27,7 +27,7 @@ script:
   - if [[ $EXECUTE_CS_CHECK == 'true' ]]; then ./vendor/bin/docheader check examples/ src/ tests/; fi
 
 after_success:
-  - if [[ $TEST_COVERAGE == 'true' ]]; then php vendor/bin/coveralls -v; fi
+  - if [[ $TEST_COVERAGE == 'true' ]]; then php ./vendor/bin/coveralls -v; fi
 
 notifications:
   webhooks:

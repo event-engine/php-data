@@ -1,5 +1,8 @@
 # EventEngine\Data
 
+[![Build Status](https://travis-ci.com/event-engine/php-data.svg?branch=master)](https://travis-ci.com/event-engine/php-data)
+[![Coverage Status](https://coveralls.io/repos/github/event-engine/php-data/badge.svg?branch=master)](https://coveralls.io/github/event-engine/php-data?branch=master)
+
 Generate Immutable Objects with ease!
 
 ![Value Object Template vo_string](https://event-engine.io/api/img/vo_string.gif)

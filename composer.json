@@ -43,8 +43,8 @@
       "@test"
     ],
     "docheader": "vendor/bin/docheader check src/ tests/",
-    "cs": "php-cs-fixer fix -v --diff --dry-run",
-    "cs-fix": "php-cs-fixer fix -v --diff",
+    "cs": "php-cs-fixer fix src -v --diff --dry-run",
+    "cs-fix": "php-cs-fixer fix src -v --diff",
     "test": "vendor/bin/phpunit"
   }
 }

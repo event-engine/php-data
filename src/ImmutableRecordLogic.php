@@ -1,7 +1,7 @@
 <?php
 /**
  * This file is part of event-engine/php-data.
- * (c) 2018-2019 prooph software GmbH <contact@prooph.de>
+ * (c) 2018-2020 prooph software GmbH <contact@prooph.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -100,24 +100,24 @@ trait ImmutableRecordLogic
                 case ImmutableRecord::PHP_TYPE_BOOL:
                 case ImmutableRecord::PHP_TYPE_ARRAY:
                     if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
-                        if ($isNullable && $this->{$key}() === null) {
+                        if ($isNullable && $this->{$key} === null) {
                             $nativeData[$key] = null;
                             continue 2;
                         }
 
                         $nativeData[$key] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
                             return $this->voTypeToNative($item, $key, $arrayPropItemTypeMap[$key]);
-                        }, $this->{$key}());
+                        }, $this->{$key});
                     } else {
-                        $nativeData[$key] = $this->{$key}();
+                        $nativeData[$key] = $this->{$key};
                     }
                     break;
                 default:
-                    if ($isNullable && $this->{$key}() === null) {
+                    if ($isNullable && (! isset($this->{$key}))) {
                         $nativeData[$key] = null;
                         continue 2;
                     }
-                    $nativeData[$key] = $this->voTypeToNative($this->{$key}(), $key, $type);
+                    $nativeData[$key] = $this->voTypeToNative($this->{$key}, $key, $type);
             }
         }
 
@@ -126,7 +126,7 @@ trait ImmutableRecordLogic
 
     public function equals(ImmutableRecord $other): bool
     {
-        if(get_class($this) !== get_class($other)) {
+        if (get_class($this) !== get_class($other)) {
             return false;
         }
 
@@ -191,7 +191,7 @@ trait ImmutableRecordLogic
     private function assertAllNotNull(): void
     {
         foreach (self::$__propTypeMap as $key => [$type, $isNative, $isNullable]) {
-            if (null === $this->{$key} && ! $isNullable) {
+            if (! isset($this->{$key}) && ! $isNullable) {
                 throw new \InvalidArgumentException(\sprintf(
                     'Missing record data for key %s of record %s.',
                     $key,

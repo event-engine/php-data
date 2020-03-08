@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace EventEngineTest\Data;
 
 use EventEngine\Data\ImmutableRecordDataConverter;
+use EventEngineTest\Data\Stub\ImmutableItem;
 use EventEngineTest\Data\Stub\TypeHintedImmutableRecordWithValueObjects;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -51,6 +52,30 @@ final class ImmutableRecordDataConverterTest extends TestCase
                 $valueObjects
             )
         );
+    }
+
+    /**
+     * @test
+     */
+    public function it_returns_array_if_passed_as_input()
+    {
+        $input = ["a" => "test"];
+
+        $dataConverter = new ImmutableRecordDataConverter();
+
+        $output = $dataConverter->convertDataToArray('data', $input);
+
+        $this->assertEquals($input, $output);
+    }
+
+    /**
+     * @test
+     */
+    public function it_returns_false_if_unknown_class_is_passed()
+    {
+        $dataConverter = new ImmutableRecordDataConverter();
+
+        $this->assertFalse($dataConverter->canConvertTypeToData(ImmutableItem::class . 'Unknown'));
     }
 
     /**

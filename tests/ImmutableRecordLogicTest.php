@@ -13,6 +13,7 @@ namespace EventEngineTest\Data;
 use EventEngineTest\Data\Stub\ImmutableItem;
 use EventEngineTest\Data\Stub\ImmutableRecordWithNoTypes;
 use EventEngineTest\Data\Stub\ImmutableRecordWithTypedGetters;
+use EventEngineTest\Data\Stub\RecordWithStringList;
 use EventEngineTest\Data\Stub\TypeHintedImmutableRecord;
 use EventEngineTest\Data\Stub\TypeHintedImmutableRecordWithValueObjects;
 use EventEngineTest\Data\Stub\ValueObject\Access;
@@ -22,6 +23,7 @@ use EventEngineTest\Data\Stub\ValueObject\Percentage;
 use EventEngineTest\Data\Stub\ValueObject\Type;
 use EventEngineTest\Data\Stub\ValueObject\Version;
 use PHPUnit\Framework\TestCase;
+use function sprintf;
 
 final class ImmutableRecordLogicTest extends TestCase
 {
@@ -108,6 +110,112 @@ final class ImmutableRecordLogicTest extends TestCase
             $this->data,
             $valueObjects->toArray()
         );
+    }
+
+    /**
+     * @test
+     */
+    public function it_returns_new_record_with_changed_properties()
+    {
+        $valueObjects = TypeHintedImmutableRecordWithValueObjects::fromArray($this->data);
+
+        $changedValueObjects = $valueObjects->with([
+            'version' => Version::fromInt(2),
+            'percentage' => Percentage::fromFloat(0.9)
+        ]);
+
+        $this->data['type'] = null;
+        $this->data['percentage'] = 0.5;
+
+        $this->assertEquals(
+            $this->data,
+            $valueObjects->toArray()
+        );
+
+        $this->data['percentage'] = 0.9;
+        $this->data['version'] = 2;
+
+        $this->assertEquals(
+            $this->data,
+            $changedValueObjects->toArray()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_equals_other_record_with_same_values()
+    {
+        $valueObjects = TypeHintedImmutableRecordWithValueObjects::fromArray($this->data);
+        $other = TypeHintedImmutableRecordWithValueObjects::fromArray($this->data);
+
+        $this->assertTrue($valueObjects->equals($other));
+    }
+
+    /**
+     * @test
+     */
+    public function it_throws_exception_if_unkown_property_provided()
+    {
+        $this->data['unknown'] = 'value';
+
+        $this->expectExceptionMessage('Invalid property passed to Record ' . TypeHintedImmutableRecordWithValueObjects::class . '. Got property with key unknown');
+
+        TypeHintedImmutableRecordWithValueObjects::fromArray($this->data);
+    }
+
+    /**
+     * @test
+     */
+    public function it_throws_exception_if_non_nullable_prop_is_missing()
+    {
+        unset($this->data['version']);
+
+        $this->expectExceptionMessage('Missing record data for key version of record ' . TypeHintedImmutableRecord::class);
+
+        TypeHintedImmutableRecord::fromArray($this->data);
+    }
+
+    /**
+     * @test
+     */
+    public function it_throws_exception_if_non_nullable_prop_should_be_set_to_null()
+    {
+        $this->data['version'] = null;
+
+        $this->expectExceptionMessage("Got null for non nullable property version of Record " . TypeHintedImmutableRecord::class);
+
+        TypeHintedImmutableRecord::fromArray($this->data);
+    }
+
+    /**
+     * @test
+     */
+    public function it_throws_exception_if_property_value_has_wrong_type()
+    {
+        $this->data['version'] = 'v1';
+
+        $this->expectExceptionMessage(sprintf(
+            "Record %s data contains invalid value for property version. Expected type is int. Got type string.",
+            TypeHintedImmutableRecord::class
+        ));
+
+        TypeHintedImmutableRecord::fromArray($this->data);
+    }
+
+    /**
+     * @test
+     */
+    public function it_throws_exception_if_array_property_contains_invalid_value()
+    {
+        $stringList = ["abc", 123, "def"];
+
+        $this->expectExceptionMessage(sprintf(
+            "Record %s data contains invalid value for property stringList. Value should be an array of string, but at least one item of the array has the wrong type.",
+            RecordWithStringList::class
+        ));
+
+        RecordWithStringList::fromArray(['stringList' => $stringList]);
     }
 
     /**

@@ -87,16 +87,12 @@ trait ImmutableRecordLogic
         return $copy;
     }
 
-    public function toArray(string ...$excludeKeys): array
+    public function toArray(): array
     {
         $nativeData = [];
         $arrayPropItemTypeMap = self::getArrayPropItemTypeMapFromMethodOrCache();
 
         foreach (self::$__propTypeMap as $key => [$type, $isNative, $isNullable]) {
-            if (in_array($key, $excludeKeys)) {
-                continue;
-            }
-
             switch ($type) {
                 case ImmutableRecord::PHP_TYPE_STRING:
                 case ImmutableRecord::PHP_TYPE_INT:
@@ -126,6 +122,13 @@ trait ImmutableRecordLogic
         }
 
         return $nativeData;
+    }
+
+    public function toArrayWithout(string ...$excludeKeys) : array
+    {
+        $nativeData = $this->toArray();
+
+        return array_diff_key($nativeData, array_flip($excludeKeys));
     }
 
     public function equals(ImmutableRecord $other): bool

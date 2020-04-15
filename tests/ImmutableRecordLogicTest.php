@@ -164,7 +164,7 @@ final class ImmutableRecordLogicTest extends TestCase
 
         unset($this->data['version'], $this->data['name']);
 
-        $dataWithoutKeys = $valueObjects->toArray('version', 'name');
+        $dataWithoutKeys = $valueObjects->toArrayWithout('version', 'name');
 
         $this->assertArrayNotHasKey('version', $dataWithoutKeys);
         $this->assertArrayNotHasKey('name', $dataWithoutKeys);

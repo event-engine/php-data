@@ -43,7 +43,9 @@ interface ImmutableRecord
      */
     public function with(array $recordData);
 
-    public function toArray(string ...$excludeKeys): array;
+    public function toArray(): array;
+
+    public function toArrayWithout(string ...$excludeKeys): array;
 
     public function equals(ImmutableRecord $other): bool;
 }

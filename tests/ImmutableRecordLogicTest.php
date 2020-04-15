@@ -164,7 +164,7 @@ final class ImmutableRecordLogicTest extends TestCase
 
         unset($this->data['version'], $this->data['name']);
 
-        $dataWithoutKeys = $valueObjects->toArrayWithout('version', 'name');
+        $dataWithoutKeys = $valueObjects->toArrayExcept('version', 'name');
 
         $this->assertArrayNotHasKey('version', $dataWithoutKeys);
         $this->assertArrayNotHasKey('name', $dataWithoutKeys);
@@ -172,6 +172,29 @@ final class ImmutableRecordLogicTest extends TestCase
         $this->assertEquals(
             $this->data,
             $dataWithoutKeys
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_includes_keys_while_converting_back_to_array()
+    {
+        $valueObjects = TypeHintedImmutableRecord::fromArray($this->data);
+
+        $this->data['type'] = null;
+        $this->data['percentage'] = 0.5;
+
+        unset($this->data['version'], $this->data['name'], $this->data['type'], $this->data['percentage']);
+
+        $dataWithKeys = $valueObjects->toArrayOnly('access', 'itemList');
+
+        $this->assertArrayHasKey('access', $dataWithKeys);
+        $this->assertArrayHasKey('itemList', $dataWithKeys);
+
+        $this->assertEquals(
+            $this->data,
+            $dataWithKeys
         );
     }
 

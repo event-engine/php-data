@@ -124,11 +124,18 @@ trait ImmutableRecordLogic
         return $nativeData;
     }
 
-    public function toArrayWithout(string ...$excludeKeys) : array
+    public function toArrayExcept(string ...$excludeKeys) : array
     {
         $nativeData = $this->toArray();
 
         return array_diff_key($nativeData, array_flip($excludeKeys));
+    }
+
+    public function toArrayOnly(string ...$includeKeys) : array
+    {
+        $nativeData = $this->toArray();
+
+        return array_intersect_key($nativeData, array_flip($includeKeys));
     }
 
     public function equals(ImmutableRecord $other): bool

@@ -45,5 +45,9 @@ interface ImmutableRecord
 
     public function toArray(): array;
 
+    public function toArrayExcept(string ...$excludeKeys): array;
+
+    public function toArrayOnly(string ...$includeKeys): array;
+
     public function equals(ImmutableRecord $other): bool;
 }

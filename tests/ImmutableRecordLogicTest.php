@@ -155,6 +155,52 @@ final class ImmutableRecordLogicTest extends TestCase
     /**
      * @test
      */
+    public function it_excludes_keys_while_converting_back_to_array()
+    {
+        $valueObjects = TypeHintedImmutableRecord::fromArray($this->data);
+
+        $this->data['type'] = null;
+        $this->data['percentage'] = 0.5;
+
+        unset($this->data['version'], $this->data['name']);
+
+        $dataWithoutKeys = $valueObjects->toArrayExcept('version', 'name');
+
+        $this->assertArrayNotHasKey('version', $dataWithoutKeys);
+        $this->assertArrayNotHasKey('name', $dataWithoutKeys);
+
+        $this->assertEquals(
+            $this->data,
+            $dataWithoutKeys
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_includes_keys_while_converting_back_to_array()
+    {
+        $valueObjects = TypeHintedImmutableRecord::fromArray($this->data);
+
+        $this->data['type'] = null;
+        $this->data['percentage'] = 0.5;
+
+        unset($this->data['version'], $this->data['name'], $this->data['type'], $this->data['percentage']);
+
+        $dataWithKeys = $valueObjects->toArrayOnly('access', 'itemList');
+
+        $this->assertArrayHasKey('access', $dataWithKeys);
+        $this->assertArrayHasKey('itemList', $dataWithKeys);
+
+        $this->assertEquals(
+            $this->data,
+            $dataWithKeys
+        );
+    }
+
+    /**
+     * @test
+     */
     public function it_throws_exception_if_unkown_property_provided()
     {
         $this->data['unknown'] = 'value';

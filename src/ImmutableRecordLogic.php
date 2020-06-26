@@ -36,7 +36,7 @@ trait ImmutableRecordLogic
      * @param array $recordData
      * @return self
      */
-    public static function fromRecordData(array $recordData)
+    public static function fromRecordData(array $recordData): self
     {
         return new self($recordData);
     }
@@ -45,7 +45,7 @@ trait ImmutableRecordLogic
      * @param array $nativeData
      * @return self
      */
-    public static function fromArray(array $nativeData)
+    public static function fromArray(array $nativeData): self
     {
         return new self(null, $nativeData);
     }
@@ -73,7 +73,7 @@ trait ImmutableRecordLogic
      * @param array $recordData
      * @return self
      */
-    public function with(array $recordData)
+    public function with(array $recordData): self
     {
         $copy = clone $this;
         $copy->setRecordData($recordData);
@@ -94,24 +94,24 @@ trait ImmutableRecordLogic
                 case ImmutableRecord::PHP_TYPE_BOOL:
                 case ImmutableRecord::PHP_TYPE_ARRAY:
                     if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
-                        if ($isNullable && $this->{$key}() === null) {
+                        if ($isNullable && $this->{$key} === null) {
                             $nativeData[$key] = null;
                             continue 2;
                         }
 
                         $nativeData[$key] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
                             return $this->voTypeToNative($item, $key, $arrayPropItemTypeMap[$key]);
-                        }, $this->{$key}());
+                        }, $this->{$key});
                     } else {
-                        $nativeData[$key] = $this->{$key}();
+                        $nativeData[$key] = $this->{$key};
                     }
                     break;
                 default:
-                    if ($isNullable && $this->{$key}() === null) {
+                    if ($isNullable && (! isset($this->{$key}))) {
                         $nativeData[$key] = null;
                         continue 2;
                     }
-                    $nativeData[$key] = $this->voTypeToNative($this->{$key}(), $key, $type);
+                    $nativeData[$key] = $this->voTypeToNative($this->{$key}, $key, $type);
             }
         }
 
@@ -120,14 +120,14 @@ trait ImmutableRecordLogic
 
     public function equals(ImmutableRecord $other): bool
     {
-        if(get_class($this) !== get_class($other)) {
+        if (get_class($this) !== get_class($other)) {
             return false;
         }
 
         return $this->toArray() === $other->toArray();
     }
 
-    private function setRecordData(array $recordData)
+    private function setRecordData(array $recordData): void
     {
         foreach ($recordData as $key => $value) {
             $this->assertType($key, $value);
@@ -135,7 +135,7 @@ trait ImmutableRecordLogic
         }
     }
 
-    private function setNativeData(array $nativeData)
+    private function setNativeData(array $nativeData): void
     {
         $recordData = [];
         $arrayPropItemTypeMap = self::getArrayPropItemTypeMapFromMethodOrCache();
@@ -182,10 +182,10 @@ trait ImmutableRecordLogic
         $this->setRecordData($recordData);
     }
 
-    private function assertAllNotNull()
+    private function assertAllNotNull(): void
     {
         foreach (self::$__propTypeMap as $key => [$type, $isNative, $isNullable]) {
-            if (null === $this->{$key} && ! $isNullable) {
+            if (! isset($this->{$key}) && ! $isNullable) {
                 throw new \InvalidArgumentException(\sprintf(
                     'Missing record data for key %s of record %s.',
                     $key,
@@ -195,7 +195,7 @@ trait ImmutableRecordLogic
         }
     }
 
-    private function assertType(string $key, $value)
+    private function assertType(string $key, $value): void
     {
         if (! isset(self::$__propTypeMap[$key])) {
             throw new \InvalidArgumentException(\sprintf(
@@ -264,7 +264,7 @@ trait ImmutableRecordLogic
         }
     }
 
-    private static function buildPropTypeMap()
+    private static function buildPropTypeMap(): array
     {
         $refObj = new \ReflectionClass(__CLASS__);
 
@@ -384,12 +384,12 @@ trait ImmutableRecordLogic
     }
 
     /**
-     * @var array
+     * @var array|null
      */
     private static $__propTypeMap;
 
     /**
-     * @var array
+     * @var array|null
      */
     private static $__arrayPropItemTypeMap;
 }

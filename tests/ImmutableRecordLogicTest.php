@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of event-engine/php-data.
  * (c) 2018-2020 prooph software GmbH <contact@prooph.de>
@@ -6,6 +7,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace EventEngineTest\Data;
@@ -13,6 +15,7 @@ namespace EventEngineTest\Data;
 use EventEngineTest\Data\Stub\ImmutableItem;
 use EventEngineTest\Data\Stub\ImmutableRecordWithNoTypes;
 use EventEngineTest\Data\Stub\ImmutableRecordWithTypedGetters;
+use EventEngineTest\Data\Stub\RecordWithSpecialKey;
 use EventEngineTest\Data\Stub\RecordWithStringList;
 use EventEngineTest\Data\Stub\TypeHintedImmutableRecord;
 use EventEngineTest\Data\Stub\TypeHintedImmutableRecordWithValueObjects;
@@ -23,7 +26,6 @@ use EventEngineTest\Data\Stub\ValueObject\Percentage;
 use EventEngineTest\Data\Stub\ValueObject\Type;
 use EventEngineTest\Data\Stub\ValueObject\Version;
 use PHPUnit\Framework\TestCase;
-use function sprintf;
 
 final class ImmutableRecordLogicTest extends TestCase
 {
@@ -121,7 +123,7 @@ final class ImmutableRecordLogicTest extends TestCase
 
         $changedValueObjects = $valueObjects->with([
             'version' => Version::fromInt(2),
-            'percentage' => Percentage::fromFloat(0.9)
+            'percentage' => Percentage::fromFloat(0.9),
         ]);
 
         $this->data['type'] = null;
@@ -155,6 +157,28 @@ final class ImmutableRecordLogicTest extends TestCase
     /**
      * @test
      */
+    public function it_supports_special_keys(): void
+    {
+        // emulates snake_case
+        $recordArray = [
+            RecordWithSpecialKey::BANK_ACCOUNT => '12324434',
+            RecordWithSpecialKey::SUCCESS_RATE => 33.33,
+            RecordWithSpecialKey::ITEM_LIST => [['name' => 'Awesome tester'], ['name' => 'John Smith']],
+        ];
+        $specialKey = RecordWithSpecialKey::fromArray($recordArray);
+        $this->assertSame($recordArray, $specialKey->toArray());
+
+        $specialKey = RecordWithSpecialKey::fromRecordData([
+            RecordWithSpecialKey::BANK_ACCOUNT => $recordArray[RecordWithSpecialKey::BANK_ACCOUNT],
+            RecordWithSpecialKey::SUCCESS_RATE => Percentage::fromFloat($recordArray[RecordWithSpecialKey::SUCCESS_RATE]),
+            RecordWithSpecialKey::ITEM_LIST => ItemList::fromArray($recordArray[RecordWithSpecialKey::ITEM_LIST]),
+        ]);
+        $this->assertSame($recordArray, $specialKey->toArray());
+    }
+
+    /**
+     * @test
+     */
     public function it_throws_exception_if_unkown_property_provided()
     {
         $this->data['unknown'] = 'value';
@@ -183,7 +207,7 @@ final class ImmutableRecordLogicTest extends TestCase
     {
         $this->data['version'] = null;
 
-        $this->expectExceptionMessage("Got null for non nullable property version of Record " . TypeHintedImmutableRecord::class);
+        $this->expectExceptionMessage('Got null for non nullable property version of Record ' . TypeHintedImmutableRecord::class);
 
         TypeHintedImmutableRecord::fromArray($this->data);
     }
@@ -195,8 +219,8 @@ final class ImmutableRecordLogicTest extends TestCase
     {
         $this->data['version'] = 'v1';
 
-        $this->expectExceptionMessage(sprintf(
-            "Record %s data contains invalid value for property version. Expected type is int. Got type string.",
+        $this->expectExceptionMessage(\sprintf(
+            'Record %s data contains invalid value for property version. Expected type is int. Got type string.',
             TypeHintedImmutableRecord::class
         ));
 
@@ -208,10 +232,10 @@ final class ImmutableRecordLogicTest extends TestCase
      */
     public function it_throws_exception_if_array_property_contains_invalid_value()
     {
-        $stringList = ["abc", 123, "def"];
+        $stringList = ['abc', 123, 'def'];
 
-        $this->expectExceptionMessage(sprintf(
-            "Record %s data contains invalid value for property stringList. Value should be an array of string, but at least one item of the array has the wrong type.",
+        $this->expectExceptionMessage(\sprintf(
+            'Record %s data contains invalid value for property stringList. Value should be an array of string, but at least one item of the array has the wrong type.',
             RecordWithStringList::class
         ));
 

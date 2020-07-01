@@ -1,7 +1,8 @@
 <?php
+
 /**
  * This file is part of event-engine/php-data.
- * (c) 2018-2019 prooph software GmbH <contact@prooph.de>
+ * (c) 2018-2020 prooph software GmbH <contact@prooph.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -87,6 +88,12 @@ trait ImmutableRecordLogic
         $arrayPropItemTypeMap = self::getArrayPropItemTypeMapFromMethodOrCache();
 
         foreach (self::$__propTypeMap as $key => [$type, $isNative, $isNullable]) {
+            $specialKey = $key;
+
+            if ($this instanceof SpecialKeySupport) {
+                $specialKey = $this->convertKeyForArray($key);
+            }
+
             switch ($type) {
                 case ImmutableRecord::PHP_TYPE_STRING:
                 case ImmutableRecord::PHP_TYPE_INT:
@@ -95,23 +102,23 @@ trait ImmutableRecordLogic
                 case ImmutableRecord::PHP_TYPE_ARRAY:
                     if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
                         if ($isNullable && $this->{$key} === null) {
-                            $nativeData[$key] = null;
+                            $nativeData[$specialKey] = null;
                             continue 2;
                         }
 
-                        $nativeData[$key] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
+                        $nativeData[$specialKey] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
                             return $this->voTypeToNative($item, $key, $arrayPropItemTypeMap[$key]);
                         }, $this->{$key});
                     } else {
-                        $nativeData[$key] = $this->{$key};
+                        $nativeData[$specialKey] = $this->{$key};
                     }
                     break;
                 default:
                     if ($isNullable && (! isset($this->{$key}))) {
-                        $nativeData[$key] = null;
+                        $nativeData[$specialKey] = null;
                         continue 2;
                     }
-                    $nativeData[$key] = $this->voTypeToNative($this->{$key}, $key, $type);
+                    $nativeData[$specialKey] = $this->voTypeToNative($this->{$key}, $key, $type);
             }
         }
 
@@ -120,7 +127,7 @@ trait ImmutableRecordLogic
 
     public function equals(ImmutableRecord $other): bool
     {
-        if (get_class($this) !== get_class($other)) {
+        if (\get_class($this) !== \get_class($other)) {
             return false;
         }
 
@@ -130,8 +137,14 @@ trait ImmutableRecordLogic
     private function setRecordData(array $recordData): void
     {
         foreach ($recordData as $key => $value) {
-            $this->assertType($key, $value);
-            $this->{$key} = $value;
+            $specialKey = $key;
+
+            if ($this instanceof SpecialKeySupport) {
+                $specialKey = $this->convertKeyForRecord($key);
+            }
+
+            $this->assertType($specialKey, $value);
+            $this->{$specialKey} = $value;
         }
     }
 
@@ -141,17 +154,23 @@ trait ImmutableRecordLogic
         $arrayPropItemTypeMap = self::getArrayPropItemTypeMapFromMethodOrCache();
 
         foreach ($nativeData as $key => $val) {
-            if (! isset(self::$__propTypeMap[$key])) {
+            $specialKey = $key;
+
+            if ($this instanceof SpecialKeySupport) {
+                $specialKey = $this->convertKeyForRecord($key);
+            }
+
+            if (! isset(self::$__propTypeMap[$specialKey])) {
                 throw new \InvalidArgumentException(\sprintf(
-                    'Invalid property passed to Record %s. Got property with key ' . $key,
+                    'Invalid property passed to Record %s. Got property with key ' . $specialKey,
                     \get_called_class()
                 ));
             }
-            [$type, $isNative, $isNullable] = self::$__propTypeMap[$key];
+            [$type, $isNative, $isNullable] = self::$__propTypeMap[$specialKey];
 
             if ($val === null) {
                 if (! $isNullable) {
-                    throw new \RuntimeException("Got null for non nullable property $key of Record " . \get_called_class());
+                    throw new \RuntimeException("Got null for non nullable property $specialKey of Record " . \get_called_class());
                 }
 
                 $recordData[$key] = null;

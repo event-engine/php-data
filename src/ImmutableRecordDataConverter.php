@@ -1,7 +1,8 @@
 <?php
+
 /**
  * This file is part of event-engine/php-data.
- * (c) 2018-2019 prooph software GmbH <contact@prooph.de>
+ * (c) 2018-2020 prooph software GmbH <contact@prooph.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -26,7 +27,7 @@ final class ImmutableRecordDataConverter implements DataConverter
             return $data;
         }
 
-        if ($data instanceof ImmutableRecord || is_callable([$data, 'toArray'])) {
+        if ($data instanceof ImmutableRecord || \is_callable([$data, 'toArray'])) {
             return $data->toArray();
         }
 
@@ -37,11 +38,11 @@ final class ImmutableRecordDataConverter implements DataConverter
     {
         $class = $this->getClassOfType($type);
 
-        if(!class_exists($class)) {
+        if (! \class_exists($class)) {
             return false;
         }
 
-        return is_callable([$class, 'fromArray']);
+        return \is_callable([$class, 'fromArray']);
     }
 
     public function convertArrayToData(string $type, array $data)

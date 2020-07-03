@@ -1,7 +1,8 @@
 <?php
+
 /**
  * This file is part of event-engine/php-data.
- * (c) 2018-2019 prooph software GmbH <contact@prooph.de>
+ * (c) 2018-2020 prooph software GmbH <contact@prooph.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -36,7 +37,7 @@ trait ImmutableRecordLogic
      * @param array $recordData
      * @return self
      */
-    public static function fromRecordData(array $recordData)
+    public static function fromRecordData(array $recordData): self
     {
         return new self($recordData);
     }
@@ -45,7 +46,7 @@ trait ImmutableRecordLogic
      * @param array $nativeData
      * @return self
      */
-    public static function fromArray(array $nativeData)
+    public static function fromArray(array $nativeData): self
     {
         return new self(null, $nativeData);
     }
@@ -73,7 +74,7 @@ trait ImmutableRecordLogic
      * @param array $recordData
      * @return self
      */
-    public function with(array $recordData)
+    public function with(array $recordData): self
     {
         $copy = clone $this;
         $copy->setRecordData($recordData);
@@ -87,6 +88,12 @@ trait ImmutableRecordLogic
         $arrayPropItemTypeMap = self::getArrayPropItemTypeMapFromMethodOrCache();
 
         foreach (self::$__propTypeMap as $key => [$type, $isNative, $isNullable]) {
+            $specialKey = $key;
+
+            if ($this instanceof SpecialKeySupport) {
+                $specialKey = $this->convertKeyForArray($key);
+            }
+
             switch ($type) {
                 case ImmutableRecord::PHP_TYPE_STRING:
                 case ImmutableRecord::PHP_TYPE_INT:
@@ -94,24 +101,24 @@ trait ImmutableRecordLogic
                 case ImmutableRecord::PHP_TYPE_BOOL:
                 case ImmutableRecord::PHP_TYPE_ARRAY:
                     if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
-                        if ($isNullable && $this->{$key}() === null) {
-                            $nativeData[$key] = null;
+                        if ($isNullable && $this->{$key} === null) {
+                            $nativeData[$specialKey] = null;
                             continue 2;
                         }
 
-                        $nativeData[$key] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
+                        $nativeData[$specialKey] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
                             return $this->voTypeToNative($item, $key, $arrayPropItemTypeMap[$key]);
-                        }, $this->{$key}());
+                        }, $this->{$key});
                     } else {
-                        $nativeData[$key] = $this->{$key}();
+                        $nativeData[$specialKey] = $this->{$key};
                     }
                     break;
                 default:
-                    if ($isNullable && $this->{$key}() === null) {
-                        $nativeData[$key] = null;
+                    if ($isNullable && (! isset($this->{$key}))) {
+                        $nativeData[$specialKey] = null;
                         continue 2;
                     }
-                    $nativeData[$key] = $this->voTypeToNative($this->{$key}(), $key, $type);
+                    $nativeData[$specialKey] = $this->voTypeToNative($this->{$key}, $key, $type);
             }
         }
 
@@ -120,38 +127,50 @@ trait ImmutableRecordLogic
 
     public function equals(ImmutableRecord $other): bool
     {
-        if(get_class($this) !== get_class($other)) {
+        if (\get_class($this) !== \get_class($other)) {
             return false;
         }
 
         return $this->toArray() === $other->toArray();
     }
 
-    private function setRecordData(array $recordData)
+    private function setRecordData(array $recordData): void
     {
         foreach ($recordData as $key => $value) {
-            $this->assertType($key, $value);
-            $this->{$key} = $value;
+            $specialKey = $key;
+
+            if ($this instanceof SpecialKeySupport) {
+                $specialKey = $this->convertKeyForRecord($key);
+            }
+
+            $this->assertType($specialKey, $value);
+            $this->{$specialKey} = $value;
         }
     }
 
-    private function setNativeData(array $nativeData)
+    private function setNativeData(array $nativeData): void
     {
         $recordData = [];
         $arrayPropItemTypeMap = self::getArrayPropItemTypeMapFromMethodOrCache();
 
         foreach ($nativeData as $key => $val) {
-            if (! isset(self::$__propTypeMap[$key])) {
+            $specialKey = $key;
+
+            if ($this instanceof SpecialKeySupport) {
+                $specialKey = $this->convertKeyForRecord($key);
+            }
+
+            if (! isset(self::$__propTypeMap[$specialKey])) {
                 throw new \InvalidArgumentException(\sprintf(
-                    'Invalid property passed to Record %s. Got property with key ' . $key,
+                    'Invalid property passed to Record %s. Got property with key ' . $specialKey,
                     \get_called_class()
                 ));
             }
-            [$type, $isNative, $isNullable] = self::$__propTypeMap[$key];
+            [$type, $isNative, $isNullable] = self::$__propTypeMap[$specialKey];
 
             if ($val === null) {
                 if (! $isNullable) {
-                    throw new \RuntimeException("Got null for non nullable property $key of Record " . \get_called_class());
+                    throw new \RuntimeException("Got null for non nullable property $specialKey of Record " . \get_called_class());
                 }
 
                 $recordData[$key] = null;
@@ -182,10 +201,10 @@ trait ImmutableRecordLogic
         $this->setRecordData($recordData);
     }
 
-    private function assertAllNotNull()
+    private function assertAllNotNull(): void
     {
         foreach (self::$__propTypeMap as $key => [$type, $isNative, $isNullable]) {
-            if (null === $this->{$key} && ! $isNullable) {
+            if (! isset($this->{$key}) && ! $isNullable) {
                 throw new \InvalidArgumentException(\sprintf(
                     'Missing record data for key %s of record %s.',
                     $key,
@@ -195,7 +214,7 @@ trait ImmutableRecordLogic
         }
     }
 
-    private function assertType(string $key, $value)
+    private function assertType(string $key, $value): void
     {
         if (! isset(self::$__propTypeMap[$key])) {
             throw new \InvalidArgumentException(\sprintf(
@@ -264,7 +283,7 @@ trait ImmutableRecordLogic
         }
     }
 
-    private static function buildPropTypeMap()
+    private static function buildPropTypeMap(): array
     {
         $refObj = new \ReflectionClass(__CLASS__);
 
@@ -384,12 +403,12 @@ trait ImmutableRecordLogic
     }
 
     /**
-     * @var array
+     * @var array|null
      */
     private static $__propTypeMap;
 
     /**
-     * @var array
+     * @var array|null
      */
     private static $__arrayPropItemTypeMap;
 }

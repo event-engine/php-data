@@ -99,35 +99,36 @@ trait ImmutableRecordLogic
                 $specialKey = $this->convertKeyForArray($key);
             }
 
-            switch ($type) {
-                case ImmutableRecord::PHP_TYPE_STRING:
-                case ImmutableRecord::PHP_TYPE_INT:
-                case ImmutableRecord::PHP_TYPE_FLOAT:
-                case ImmutableRecord::PHP_TYPE_BOOL:
-                case ImmutableRecord::PHP_TYPE_ARRAY:
-                    if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
-                        if ($isNullable && $this->{$key} === null) {
-                            $nativeData[$specialKey] = null;
-                            continue 2;
-                        }
-
-                        $nativeData[$specialKey] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
-                            return $this->voTypeToNative($item, $key, $arrayPropItemTypeMap[$key]);
-                        }, $this->{$key});
-                    } else {
-                        $nativeData[$specialKey] = $this->{$key};
-                    }
-                    break;
-                default:
-                    if ($isNullable && (! isset($this->{$key}))) {
-                        $nativeData[$specialKey] = null;
-                        continue 2;
-                    }
-                    $nativeData[$specialKey] = $this->voTypeToNative($this->{$key}, $key, $type);
-            }
+            $nativeData[$specialKey] = $this->convertValueForArray($arrayPropItemTypeMap, $key, $type, $isNullable);
         }
 
         return $nativeData;
+    }
+
+    private function convertValueForArray($arrayPropItemTypeMap, $key, $type, $isNullable)
+    {
+        switch ($type) {
+            case ImmutableRecord::PHP_TYPE_STRING:
+            case ImmutableRecord::PHP_TYPE_INT:
+            case ImmutableRecord::PHP_TYPE_FLOAT:
+            case ImmutableRecord::PHP_TYPE_BOOL:
+            case ImmutableRecord::PHP_TYPE_ARRAY:
+                if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
+                    if ($isNullable && $this->{$key} === null) {
+                        return null;
+                    }
+
+                    return \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
+                        return $this->voTypeToNative($item, $key, $arrayPropItemTypeMap[$key]);
+                    }, $this->{$key});
+                }
+                return $this->{$key};
+            default:
+                if ($isNullable && (! isset($this->{$key}))) {
+                    return null;
+                }
+                return $this->voTypeToNative($this->{$key}, $key, $type);
+        }
     }
 
     public function equals(ImmutableRecord $other): bool
@@ -159,51 +160,53 @@ trait ImmutableRecordLogic
         $arrayPropItemTypeMap = self::getArrayPropItemTypeMapFromMethodOrCache();
 
         foreach ($nativeData as $key => $val) {
-            $specialKey = $key;
-
-            if ($this instanceof SpecialKeySupport) {
-                $specialKey = $this->convertKeyForRecord($key);
-            }
-
-            if (! isset(self::$__propTypeMap[$specialKey])) {
-                throw new \InvalidArgumentException(\sprintf(
-                    'Invalid property passed to Record %s. Got property with key ' . $specialKey,
-                    \get_called_class()
-                ));
-            }
-            [$type, $isNative, $isNullable] = self::$__propTypeMap[$specialKey];
-
-            if ($val === null) {
-                if (! $isNullable) {
-                    throw new \RuntimeException("Got null for non nullable property $specialKey of Record " . \get_called_class());
-                }
-
-                $recordData[$key] = null;
-                continue;
-            }
-
-            switch ($type) {
-                case ImmutableRecord::PHP_TYPE_STRING:
-                case ImmutableRecord::PHP_TYPE_INT:
-                case ImmutableRecord::PHP_TYPE_FLOAT:
-                case ImmutableRecord::PHP_TYPE_BOOL:
-                    $recordData[$key] = $val;
-                    break;
-                case ImmutableRecord::PHP_TYPE_ARRAY:
-                    if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
-                        $recordData[$key] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
-                            return $this->fromType($item, $arrayPropItemTypeMap[$key]);
-                        }, $val);
-                    } else {
-                        $recordData[$key] = $val;
-                    }
-                    break;
-                default:
-                    $recordData[$key] = $this->fromType($val, $type);
-            }
+            $recordData[$key] = $this->convertValueForRecord($arrayPropItemTypeMap, $key, $val);
         }
 
         $this->setRecordData($recordData);
+    }
+
+    private function convertValueForRecord($arrayPropItemTypeMap, $key, $val)
+    {
+        $specialKey = $key;
+
+        if ($this instanceof SpecialKeySupport) {
+            $specialKey = $this->convertKeyForRecord($key);
+        }
+
+        if (! isset(self::$__propTypeMap[$specialKey])) {
+            throw new \InvalidArgumentException(\sprintf(
+                'Invalid property passed to Record %s. Got property with key ' . $specialKey,
+                \get_called_class()
+            ));
+        }
+
+        [$type, $isNative, $isNullable] = self::$__propTypeMap[$specialKey];
+
+        if ($val === null) {
+            if (! $isNullable) {
+                throw new \RuntimeException("Got null for non nullable property $specialKey of Record " . \get_called_class());
+            }
+
+            return null;
+        }
+
+        switch ($type) {
+            case ImmutableRecord::PHP_TYPE_STRING:
+            case ImmutableRecord::PHP_TYPE_INT:
+            case ImmutableRecord::PHP_TYPE_FLOAT:
+            case ImmutableRecord::PHP_TYPE_BOOL:
+                return $val;
+            case ImmutableRecord::PHP_TYPE_ARRAY:
+                if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
+                    return \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
+                        return $this->fromType($item, $arrayPropItemTypeMap[$key]);
+                    }, $val);
+                }
+                    return $val;
+            default:
+                return $this->fromType($val, $type);
+        }
     }
 
     private function assertAllNotNull(): void
@@ -297,7 +300,12 @@ trait ImmutableRecordLogic
         $propTypeMap = [];
 
         foreach ($props as $prop) {
-            if ($prop->getName() === '__propTypeMap' || $prop->getName() === '__schema' || $prop->getName() === '__arrayPropItemTypeMap') {
+            $name = $prop->getName();
+
+            if ($name === '__propTypeMap'
+                || $name === '__schema'
+                || $name === '__arrayPropItemTypeMap'
+            ) {
                 continue;
             }
 

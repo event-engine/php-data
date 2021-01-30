@@ -1,7 +1,7 @@
 <?php
 /**
  * This file is part of event-engine/php-data.
- * (c) 2018-2020 prooph software GmbH <contact@prooph.de>
+ * (c) 2018-2021 prooph software GmbH <contact@prooph.de>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,7 +20,7 @@ final class ImmutableRecordDataConverterTest extends TestCase
 {
     private $data = [];
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

@@ -24,6 +24,7 @@ final class RecordWithSpecialKey implements ImmutableRecord, SpecialKeySupport
     public const BANK_ACCOUNT = 'bank_account';
     public const SUCCESS_RATE = 'success_rate';
     public const ITEM_LIST = 'item_list';
+    public const ITEM_ARRAY = 'item_array';
 
     /**
      * @var string
@@ -39,6 +40,11 @@ final class RecordWithSpecialKey implements ImmutableRecord, SpecialKeySupport
      * @var ItemList
      */
     private $itemList;
+
+    /**
+     * @var array<ImmutableItem>
+     */
+    private $itemArray;
 
     /**
      * @return mixed
@@ -64,6 +70,14 @@ final class RecordWithSpecialKey implements ImmutableRecord, SpecialKeySupport
         return $this->itemList;
     }
 
+    /**
+     * @return array<ImmutableItem>
+     */
+    public function itemArray(): array
+    {
+        return $this->itemArray;
+    }
+
     public function convertKeyForRecord(string $key): string
     {
         switch ($key) {
@@ -71,6 +85,8 @@ final class RecordWithSpecialKey implements ImmutableRecord, SpecialKeySupport
                 return 'successRate';
             case self::ITEM_LIST:
                 return 'itemList';
+            case self::ITEM_ARRAY:
+                return 'itemArray';
             default:
                 return 'bankAccount';
         }
@@ -83,8 +99,17 @@ final class RecordWithSpecialKey implements ImmutableRecord, SpecialKeySupport
                 return self::SUCCESS_RATE;
             case 'itemList':
                 return self::ITEM_LIST;
+            case 'itemArray':
+                return self::ITEM_ARRAY;
             default:
                 return self::BANK_ACCOUNT;
         }
+    }
+
+    private static function arrayPropItemTypeMap(): array
+    {
+        return [
+            'itemArray' => ImmutableItem::class,
+        ];
     }
 }

@@ -163,6 +163,8 @@ final class ImmutableRecordLogicTest extends TestCase
             RecordWithSpecialKey::BANK_ACCOUNT => '12324434',
             RecordWithSpecialKey::SUCCESS_RATE => 33.33,
             RecordWithSpecialKey::ITEM_LIST => [['name' => 'Awesome tester'], ['name' => 'John Smith']],
+            RecordWithSpecialKey::ITEM_ARRAY => [['name' => 'Awesome tester array'], ['name' => 'John Smith array']],
+
         ];
         $specialKey = RecordWithSpecialKey::fromArray($recordArray);
         $this->assertSame($recordArray, $specialKey->toArray());
@@ -171,6 +173,12 @@ final class ImmutableRecordLogicTest extends TestCase
             RecordWithSpecialKey::BANK_ACCOUNT => $recordArray[RecordWithSpecialKey::BANK_ACCOUNT],
             RecordWithSpecialKey::SUCCESS_RATE => Percentage::fromFloat($recordArray[RecordWithSpecialKey::SUCCESS_RATE]),
             RecordWithSpecialKey::ITEM_LIST => ItemList::fromArray($recordArray[RecordWithSpecialKey::ITEM_LIST]),
+            RecordWithSpecialKey::ITEM_ARRAY => array_map(
+                static function (array $item) {
+                    return ImmutableItem::fromArray($item);
+                },
+                $recordArray[RecordWithSpecialKey::ITEM_ARRAY]
+            ),
         ]);
         $this->assertSame($recordArray, $specialKey->toArray());
     }

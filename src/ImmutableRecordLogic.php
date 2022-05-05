@@ -190,9 +190,9 @@ trait ImmutableRecordLogic
                     $recordData[$key] = $val;
                     break;
                 case ImmutableRecord::PHP_TYPE_ARRAY:
-                    if (\array_key_exists($key, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$key])) {
-                        $recordData[$key] = \array_map(function ($item) use ($key, &$arrayPropItemTypeMap) {
-                            return $this->fromType($item, $arrayPropItemTypeMap[$key]);
+                    if (\array_key_exists($specialKey, $arrayPropItemTypeMap) && ! self::isScalarType($arrayPropItemTypeMap[$specialKey])) {
+                        $recordData[$key] = \array_map(function ($item) use ($specialKey, &$arrayPropItemTypeMap) {
+                            return $this->fromType($item, $arrayPropItemTypeMap[$specialKey]);
                         }, $val);
                     } else {
                         $recordData[$key] = $val;

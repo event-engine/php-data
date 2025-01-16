@@ -56,7 +56,7 @@ trait ImmutableRecordLogic
         return new self(null, $nativeData);
     }
 
-    private function __construct(array $recordData = null, array $nativeData = null)
+    private function __construct(array|null $recordData = null, array|null $nativeData = null)
     {
         if (null === self::$__propTypeMap) {
             self::$__propTypeMap = self::buildPropTypeMap();

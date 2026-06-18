@@ -266,4 +266,31 @@ final class ImmutableRecordLogicTest extends TestCase
 
         ImmutableRecordWithNoTypes::fromArray($this->data);
     }
+
+    /**
+     * @test
+     */
+    public function it_supports_json_serializable()
+    {
+        $record = TypeHintedImmutableRecordWithValueObjects::fromArray($this->data);
+
+        $this->data['type'] = null;
+        $this->data['percentage'] = 0.5;
+
+        $this->assertEquals(
+            $this->data,
+            $record->jsonSerialize()
+        );
+
+        $this->assertEquals(
+            $record->toArray(),
+            $record->jsonSerialize()
+        );
+
+        $json = json_encode($record);
+        $this->assertJson($json);
+
+        $decoded = json_decode($json, true);
+        $this->assertEquals($this->data, $decoded);
+    }
 }

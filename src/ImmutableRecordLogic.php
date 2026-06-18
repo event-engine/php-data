@@ -139,6 +139,11 @@ trait ImmutableRecordLogic
         return $this->toArray() === $other->toArray();
     }
 
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }
+
     private function setRecordData(array $recordData): void
     {
         foreach ($recordData as $key => $value) {

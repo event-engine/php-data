@@ -17,7 +17,7 @@ namespace EventEngine\Data;
  * @package EventEngine\Data
  * @psalm-immutable
  */
-interface ImmutableRecord
+interface ImmutableRecord extends \JsonSerializable
 {
     const PHP_TYPE_STRING = 'string';
     const PHP_TYPE_INT = 'int';
